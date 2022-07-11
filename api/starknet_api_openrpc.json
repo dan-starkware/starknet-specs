@@ -1,15 +1,15 @@
 {
     "openrpc": "1.0.0-rc1",
     "info": {
-        "version": "0.16.0",
+        "version": "0.21.0",
         "title": "StarkNet Node API",
         "license": {}
     },
     "servers": [],
     "methods": [
         {
-            "name": "starknet_getBlockByHash",
-            "summary": "Get block information given the block id",
+            "name": "starknet_getBlockWithTxHashesByHash",
+            "summary": "Get block information with transaction hashes given the block id",
             "params": [
                 {
                     "name": "block_hash",
@@ -18,26 +18,18 @@
                     "schema": {
                         "$ref": "#/components/schemas/BLOCK_HASH_OR_TAG"
                     }
-                },
-                {
-                    "name": "requested_scope",
-                    "description": "The scope of the block information requested. Defaults to txn hashes only",
-                    "required": false,
-                    "schema": {
-                        "$ref": "#/components/schemas/BLOCK_RESPONSE_SCOPE_OPTIONS"
-                    }
                 }
             ],
             "result": {
                 "name": "result",
-                "description": "The resulting block information",
+                "description": "The resulting block information with transaction hashes",
                 "schema": {
                     "oneOf": [
                         {
-                            "$ref": "#/components/schemas/BLOCK"
+                            "$ref": "#/components/schemas/BLOCK_WITH_TX_HASHES"
                         },
                         {
-                            "$ref": "#/components/schemas/PENDING_BLOCK"
+                            "$ref": "#/components/schemas/PENDING_BLOCK_WITH_TX_HASHES"
                         }
                     ]
                 }
@@ -49,8 +41,41 @@
             ]
         },
         {
-            "name": "starknet_getBlockByNumber",
-            "summary": "Get block information given the block number (its height)",
+            "name": "starknet_getBlockWithTxsByHash",
+            "summary": "Get block information with full transactions given the block id",
+            "params": [
+                {
+                    "name": "block_hash",
+                    "description": "The hash (id) of the requested block, or a block tag",
+                    "required": true,
+                    "schema": {
+                        "$ref": "#/components/schemas/BLOCK_HASH_OR_TAG"
+                    }
+                }
+            ],
+            "result": {
+                "name": "result",
+                "description": "The resulting block information with full transactions",
+                "schema": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/components/schemas/BLOCK_WITH_TXS"
+                        },
+                        {
+                            "$ref": "#/components/schemas/PENDING_BLOCK_WITH_TXS"
+                        }
+                    ]
+                }
+            },
+            "errors": [
+                {
+                    "$ref": "#/components/errors/INVALID_BLOCK_HASH"
+                }
+            ]
+        },
+        {
+            "name": "starknet_getBlockWithTxHashesByNumber",
+            "summary": "Get block information with transaction hashes given the block number (its height)",
             "params": [
                 {
                     "name": "block_number",
@@ -60,26 +85,52 @@
                     "schema": {
                         "$ref": "#/components/schemas/BLOCK_NUM_OR_TAG"
                     }
-                },
+                }
+            ],
+            "result": {
+                "name": "result",
+                "description": "The resulting block information with transaction hashes",
+                "schema": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/components/schemas/BLOCK_WITH_TX_HASHES"
+                        },
+                        {
+                            "$ref": "#/components/schemas/PENDING_BLOCK_WITH_TX_HASHES"
+                        }
+                    ]
+                }
+            },
+            "errors": [
                 {
-                    "name": "requested_scope",
-                    "description": "The scope of the block information requested. Defaults to txn hashes only",
-                    "required": false,
+                    "$ref": "#/components/errors/INVALID_BLOCK_NUMBER"
+                }
+            ]
+        },
+        {
+            "name": "starknet_getBlockWithTxsByNumber",
+            "summary": "Get block information with full transactions given the block number (its height)",
+            "params": [
+                {
+                    "name": "block_number",
+                    "summary": "The requested block number",
+                    "description": "The number (height) of the requested block or a block tag",
+                    "required": true,
                     "schema": {
-                        "$ref": "#/components/schemas/BLOCK_RESPONSE_SCOPE_OPTIONS"
+                        "$ref": "#/components/schemas/BLOCK_NUM_OR_TAG"
                     }
                 }
             ],
             "result": {
                 "name": "result",
-                "description": "The resulting block information",
+                "description": "The resulting block information with full transactions",
                 "schema": {
                     "oneOf": [
                         {
-                            "$ref": "#/components/schemas/BLOCK"
+                            "$ref": "#/components/schemas/BLOCK_WITH_TXS"
                         },
                         {
-                            "$ref": "#/components/schemas/PENDING_BLOCK"
+                            "$ref": "#/components/schemas/PENDING_BLOCK_WITH_TXS"
                         }
                     ]
                 }
@@ -135,7 +186,7 @@
                     "summary": "The key to the storage value for the given contract",
                     "required": true,
                     "schema": {
-                        "$ref": "#/components/schemas/FELT"
+                        "$ref": "#/components/schemas/STORAGE_KEY"
                     }
                 },
                 {
@@ -158,9 +209,6 @@
             "errors": [
                 {
                     "$ref": "#/components/errors/CONTRACT_NOT_FOUND"
-                },
-                {
-                    "$ref": "#/components/errors/INVALID_STORAGE_KEY"
                 },
                 {
                     "$ref": "#/components/errors/INVALID_BLOCK_HASH"
@@ -323,8 +371,16 @@
         },
         {
             "name": "starknet_getClassHashAt",
-            "summary": "Get the contract class hash for the contract deployed at the given address",
+            "summary": "Get the contract class hash in the given block number for the contract deployed at the given address",
             "params": [
+                {
+                    "name": "block_number",
+                    "summary": "The queried block number or a block tag",
+                    "required": true,
+                    "schema": {
+                        "$ref": "#/components/schemas/BLOCK_NUM_OR_TAG"
+                    }
+                },
                 {
                     "name": "contract_address",
                     "description": "The address of the contract whose class hash will be returned",
@@ -342,6 +398,9 @@
                 }
             },
             "errors": [
+                {
+                    "$ref": "#/components/errors/INVALID_BLOCK_NUMBER"
+                },
                 {
                     "$ref": "#/components/errors/CONTRACT_NOT_FOUND"
                 }
@@ -697,15 +756,6 @@
     "components": {
         "contentDescriptors": {},
         "schemas": {
-            "BLOCK_RESPONSE_SCOPE_OPTIONS": {
-                "title": "Options for block information requests",
-                "type": "string",
-                "enum": [
-                    "TXN_HASH",
-                    "FULL_TXNS",
-                    "FULL_TXN_AND_RECEIPTS"
-                ]
-            },
             "RESULT_PAGE_REQUEST": {
                 "title": "A request for a specific page of results",
                 "description": "A specification of a result page to retrieve",
@@ -953,6 +1003,13 @@
             "ADDRESS": {
                 "$ref": "#/components/schemas/FELT"
             },
+            "STORAGE_KEY": {
+                "type": "string",
+                "title": "A storage key",
+                "$comment": "A storage key, represented as a string of hex digits",
+                "description": "A storage key. Represented as up to 62 hex digits, 3 bits, and 5 leading zeroes.",
+                "pattern": "^0x0[0-7]{1}[a-fA-F0-9]{0,62}$"
+            },
             "ETH_ADDRESS": {
                 "type": "string",
                 "$comment": "An ethereum address",
@@ -979,32 +1036,23 @@
             "BLOCK_HASH": {
                 "$ref": "#/components/schemas/FELT"
             },
-            "BLOCK_BODY": {
+            "BLOCK_BODY_WITH_TX_HASHES": {
                 "transactions": {
-                    "oneOf": [
-                        {
-                            "description": "The hashes of the transactions included in this block",
-                            "type": "array",
-                            "items": {
-                                "description": "The hash of a single transaction",
-                                "$ref": "#/components/schemas/TXN_HASH"
-                            }
-                        },
-                        {
-                            "description": "The transactions in this block",
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/TXN"
-                            }
-                        },
-                        {
-                            "description": "The transactions in this block + their receipts",
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/TXN_OBJECT_AND_RECEIPT"
-                            }
-                        }
-                    ]
+                    "description": "The hashes of the transactions included in this block",
+                    "type": "array",
+                    "items": {
+                        "description": "The hash of a single transaction",
+                        "$ref": "#/components/schemas/TXN_HASH"
+                    }
+                }
+            },
+            "BLOCK_BODY_WITH_TXS": {
+                "transactions": {
+                    "description": "The transactions in this block",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/components/schemas/TXN"
+                    }
                 }
             },
             "BLOCK_HEADER": {
@@ -1033,7 +1081,7 @@
                     "$ref": "#/components/schemas/FELT"
                 }
             },
-            "BLOCK": {
+            "BLOCK_WITH_TX_HASHES": {
                 "title": "The block object",
                 "allOf": [
                     {
@@ -1045,15 +1093,58 @@
                         "$ref": "#/components/schemas/BLOCK_HEADER"
                     },
                     {
-                        "$ref": "#/components/schemas/BLOCK_BODY"
+                        "$ref": "#/components/schemas/BLOCK_BODY_WITH_TX_HASHES"
                     }
                 ]
             },
-            "PENDING_BLOCK": {
+            "BLOCK_WITH_TXS": {
+                "title": "The block object",
+                "allOf": [
+                    {
+                        "status": {
+                            "$ref": "#/components/schemas/BLOCK_STATUS"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/schemas/BLOCK_HEADER"
+                    },
+                    {
+                        "$ref": "#/components/schemas/BLOCK_BODY_WITH_TXS"
+                    }
+                ]
+            },
+            "PENDING_BLOCK_WITH_TX_HASHES": {
                 "description": "The dynamic block being constructed by the sequencer. Note that this object will be deprecated upon decentralization.",
                 "allOf": [
                     {
-                        "$ref": "#/components/schemas/BLOCK_BODY"
+                        "$ref": "#/components/schemas/BLOCK_BODY_WITH_TX_HASHES"
+                    },
+                    {
+                        "timestamp": {
+                            "description": "The time in which the block was created, encoded in Unix time",
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "sequencer_address": {
+                            "description": "The StarkNet identity of the sequencer submitting this block",
+                            "$ref": "#/components/schemas/FELT"
+                        }
+                    },
+                    {
+                        "parent_hash": {
+                            "description": "The hash of this block's parent",
+                            "$ref": "#/components/schemas/BLOCK_HASH"
+                        }
+                    }
+                ]
+            },
+            "PENDING_BLOCK_WITH_TXS": {
+                "description": "The dynamic block being constructed by the sequencer. Note that this object will be deprecated upon decentralization.",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BLOCK_BODY_WITH_TXS"
                     },
                     {
                         "timestamp": {
@@ -1124,6 +1215,9 @@
                     },
                     {
                         "$ref": "#/components/schemas/DECLARE_TXN"
+                    },
+                    {
+                        "$ref": "#/components/schemas/DEPLOY_TXN"
                     }
                 ]
             },
@@ -1166,9 +1260,9 @@
                     {
                         "type": "object",
                         "properties": {
-                            "contract_class": {
-                                "description": "The class to be delcared",
-                                "$ref": "#/components/schemas/CONTRACT_CLASS"
+                            "class_hash": {
+                                "description": "The hash of the declared class",
+                                "$ref": "#/components/schemas/FELT"
                             },
                             "sender_address": {
                                 "description": "The address of the account contract sending the declaration transaction",
@@ -1177,6 +1271,34 @@
                         }
                     }
                 ]
+            },
+            "DEPLOY_TXN": {
+                "title": "Deploy Contract Transaction",
+                "description": "The structure of a deploy transaction. Note that this transaction type is deprecated and will no longer be supported in future versions",
+                "properties": {
+                    "type": "object",
+                    "properties": {
+                        "txn_hash": {
+                            "$ref": "#/components/schemas/TXN_HASH",
+                            "description": "The hash identifying the transaction"
+                        },
+                        "class_hash": {
+                            "description": "The hash of the deployed contract's class",
+                            "$ref": "#/components/schemas/FELT"
+                        },
+                        "contract_address": {
+                            "description": "The address of the deployed contract",
+                            "$ref": "#/components/schemas/FELT"
+                        },
+                        "constructor_calldata": {
+                            "type": "array",
+                            "description": "The parameters passed to the constructor",
+                            "items": {
+                                "$ref": "#/components/schemas/FELT"
+                            }
+                        }
+                    }
+                }
             },
             "INVOKE_TXN": {
                 "title": "Invoke Contract Transaction",
@@ -1436,10 +1558,6 @@
             "INVALID_CALL_DATA": {
                 "code": 22,
                 "message": "Invalid call data"
-            },
-            "INVALID_STORAGE_KEY": {
-                "code": 23,
-                "message": "Invalid storage key"
             },
             "INVALID_BLOCK_HASH": {
                 "code": 24,
